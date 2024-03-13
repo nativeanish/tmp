@@ -1,0 +1,4 @@
+{
+  "user": [],
+  "molecule_endpoints": { "ar": "https://molecules-exm.herokuapp.com/ar-ota" }
+}

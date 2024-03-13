@@ -1,0 +1,24 @@
+{
+  "name": "contract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.11.27",
+    "axios": "^1.6.7",
+    "copyfiles": "^2.4.1",
+    "esbuild": "^0.20.1",
+    "replace-in-file": "^7.1.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2"
+  },
+  "scripts": {
+    "build:contracts": "yarn run clean && yarn run build-ts && npm run cp",
+    "build-ts": "npx ts-node build.ts",
+    "clean": "npx rimraf ./dist",
+    "cp": "npx copyfiles init.json dist",
+    "build": "yarn run build:contracts",
+    "deploy": "yarn ts-node deploy.ts"
+  }
+}
