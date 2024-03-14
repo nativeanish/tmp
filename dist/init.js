@@ -88,7 +88,7 @@ async function register(action, state) {
 }
 
 // init.ts
-async function handle(action, state) {
+export async function handle(state, action) {
   try {
     switch (action.input.function) {
       case "register":

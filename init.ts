@@ -4,7 +4,7 @@ import { Action, State, _return } from "./action/types";
 import register from "./action/write/register";
 
 declare const ContractError: new (arg0: string) => any;
-export async function handle(action: Action, state: State): Promise<_return> {
+export async function handle(state: State, action: Action): Promise<_return> {
   try {
     switch (action.input.function) {
       case "register":
