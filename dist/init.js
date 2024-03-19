@@ -211,15 +211,13 @@ async function register_comment(state, action) {
           (e) => e.id === action.input.article_id
         );
         if (_article.length) {
-          state.articles
-            .filter((e) => e.id === action.input.article_id)[0]
-            .comment.push({
-              content: action.input.id,
-              owner: [{ address }],
-              like: [],
-              //@ts-ignore
-              created_at: String(EXM.getDate().getTime()),
-            });
+          state.articles[state.articles.indexOf(_article[0])].comment.push({
+            content: action.input.content,
+            owner: [{ address }],
+            like: [],
+            //@ts-ignore
+            created_at: String(EXM.getDate().getTime()),
+          });
           return { state };
         } else {
           throw new ContractError("Article is not present");
