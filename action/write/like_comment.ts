@@ -26,7 +26,7 @@ export default async function like_comment(
         );
         if (_check.length) {
           const _comment = _check[0].comment.filter(
-            (e) => e.id === action.input.id
+            (e) => e.content === action.input.id
           );
           if (_comment.length) {
             const __check = _comment[0].like.map((e) => e.address === address);
@@ -35,7 +35,7 @@ export default async function like_comment(
             } else {
               state.articles
                 .filter((e) => e.id === action.input.article_id)[0]
-                .comment.filter((e) => e.id === action.input.id)[0]
+                .comment.filter((e) => e.content === action.input.id)[0]
                 .like.push({ address: address });
               return { state: state };
             }

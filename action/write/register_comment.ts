@@ -18,16 +18,18 @@ export default async function register_comment(
     if (state.user[address] !== undefined) {
       if (
         action.input.article_id &&
-        action.input.id &&
+        action.input.content &&
         action.input.article_id.length > 0 &&
-        action.input.id.length > 0
+        action.input.content.length > 0
       ) {
-        const _article = state.articles.filter((e) => e.id === action.input.id);
+        const _article = state.articles.filter(
+          (e) => e.id === action.input.article_id
+        );
         if (_article.length) {
           state.articles
             .filter((e) => e.id === action.input.article_id)[0]
             .comment.push({
-              id: action.input.id,
+              content: action.input.id,
               owner: [{ address: address }],
               like: [],
               //@ts-ignore

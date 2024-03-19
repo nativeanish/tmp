@@ -203,16 +203,18 @@ async function register_comment(state, action) {
     if (state.user[address] !== void 0) {
       if (
         action.input.article_id &&
-        action.input.id &&
+        action.input.content &&
         action.input.article_id.length > 0 &&
-        action.input.id.length > 0
+        action.input.content.length > 0
       ) {
-        const _article = state.articles.filter((e) => e.id === action.input.id);
+        const _article = state.articles.filter(
+          (e) => e.id === action.input.article_id
+        );
         if (_article.length) {
           state.articles
             .filter((e) => e.id === action.input.article_id)[0]
             .comment.push({
-              id: action.input.id,
+              content: action.input.id,
               owner: [{ address }],
               like: [],
               //@ts-ignore
@@ -249,7 +251,7 @@ async function like_comment(state, action) {
         );
         if (_check.length) {
           const _comment = _check[0].comment.filter(
-            (e) => e.id === action.input.id
+            (e) => e.content === action.input.id
           );
           if (_comment.length) {
             const __check = _comment[0].like.map((e) => e.address === address);
@@ -258,7 +260,7 @@ async function like_comment(state, action) {
             } else {
               state.articles
                 .filter((e) => e.id === action.input.article_id)[0]
-                .comment.filter((e) => e.id === action.input.id)[0]
+                .comment.filter((e) => e.content === action.input.id)[0]
                 .like.push({ address });
               return { state };
             }
@@ -341,7 +343,7 @@ async function get_user(state, action) {
 
 // action/read/get_article.ts
 async function get_article(state, action) {
-  if (action.input.title && action.input.article_id.length) {
+  if (action.input.title && action.input.title.length) {
     const articles = state.articles.filter(
       (e) => e.title === action.input.title
     );
@@ -367,6 +369,30 @@ async function address_to_username(state, action) {
   } else {
     throw new ContractError("PubKey is missing");
   }
+}
+
+// action/read/get_articles_recom.ts
+async function get_articles_recom(state, action) {
+  if (state.articles.length > 3) {
+    return { result: { status: 1, data: state.articles.slice(0, 3) } };
+  } else {
+    return { result: { status: 1, data: state.articles } };
+  }
+}
+
+// action/read/get_user_recom.ts
+async function get_user_recom(state, action) {
+  const user = [];
+  const key = Object.keys(state.user).slice(0, 3);
+  for (const _key of key) {
+    user.push({ address: _key, User: state.user[_key] });
+  }
+  return {
+    result: {
+      status: 1,
+      data: user,
+    },
+  };
 }
 
 // init.ts
@@ -401,6 +427,10 @@ export async function handle(state, action) {
         return await address_to_username(state, action);
       case "username_to_address":
         return await username_to_address(action, state);
+      case "get_articles_recom":
+        return await get_articles_recom(state, action);
+      case "get_user_recom":
+        return await get_user_recom(state, action);
       default:
         throw new ContractError("ERROR_INVALID_FUNCTION_SUPPLIED");
     }

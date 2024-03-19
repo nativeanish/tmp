@@ -15,7 +15,7 @@ export interface State {
   articles: Array<Articles>;
 }
 export interface Comment {
-  id: string;
+  content: string;
   like: Array<{ address: string }>;
   created_at: string;
   owner: Array<{ address: string }>;
@@ -60,6 +60,7 @@ export interface Action {
     tags: Array<string>;
     udl: string;
     article_id: string;
+    content: string;
   };
 }
 export type _return = _q_returns | _s_returns;
