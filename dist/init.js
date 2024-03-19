@@ -393,6 +393,22 @@ async function get_user_recom(state, action) {
   };
 }
 
+// action/read/get_article_by_id.ts
+async function get_article_by_id(state, action) {
+  if (action.input.id && action.input.id.length > 0) {
+    const _check = state.articles.filter((e) => e.id === action.input.id);
+    if (_check.length) {
+      return { result: { status: 1, data: _check[0] } };
+    } else {
+      return {
+        result: { status: 0, data: "Article not found" },
+      };
+    }
+  } else {
+    throw new ContractError("id is missing");
+  }
+}
+
 // init.ts
 export async function handle(state, action) {
   try {
@@ -429,6 +445,8 @@ export async function handle(state, action) {
         return await get_articles_recom(state, action);
       case "get_user_recom":
         return await get_user_recom(state, action);
+      case "get_article_by_id":
+        return await get_article_by_id(state, action);
       default:
         throw new ContractError("ERROR_INVALID_FUNCTION_SUPPLIED");
     }

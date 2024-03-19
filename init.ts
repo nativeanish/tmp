@@ -15,6 +15,7 @@ import address_to_username from "./action/utils/address_to_username";
 import username_to_address from "./action/utils/username_to_address";
 import get_articles_recom from "./action/read/get_articles_recom";
 import get_user_recom from "./action/read/get_user_recom";
+import get_article_by_id from "./action/read/get_article_by_id";
 
 declare const ContractError: new (arg0: string) => any;
 export async function handle(state: State, action: Action): Promise<_return> {
@@ -52,6 +53,8 @@ export async function handle(state: State, action: Action): Promise<_return> {
         return await get_articles_recom(state, action);
       case "get_user_recom":
         return await get_user_recom(state, action);
+      case "get_article_by_id":
+        return await get_article_by_id(state, action);
       default:
         throw new ContractError("ERROR_INVALID_FUNCTION_SUPPLIED");
     }

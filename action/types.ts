@@ -48,7 +48,8 @@ export interface Action {
       | "address_to_username"
       | "username_to_address"
       | "get_articles_recom"
-      | "get_user_recom";
+      | "get_user_recom"
+      | "get_article_by_id";
     pubKey: string;
     username: string;
     img_url: string;
