@@ -1,4 +1,6 @@
 {
-  "user": [],
-  "molecule_endpoints": { "ar": "https://molecules-exm.herokuapp.com/ar-ota" }
+  "user": {},
+  "molecule_endpoints": { "ar": "https://molecules-exm.herokuapp.com/ar-ota" },
+  "tags": [],
+  "articles": []
 }

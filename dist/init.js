@@ -25,9 +25,8 @@ var pubtoid_default = _ownerToAddress;
 async function check_user(action, state) {
   if (action.input.pubKey && action.input.pubKey.length > 0) {
     const address = await pubtoid_default(action.input.pubKey, state);
-    const result = state.user.filter((e) => e.id === address);
-    if (result.length > 0) {
-      return { result: { status: 1, data: result[0] } };
+    if (state.user[address] !== void 0) {
+      return { result: { status: 1, data: state.user[address] } };
     } else {
       return { result: { status: 0, data: "User is not register" } };
     }
@@ -39,16 +38,38 @@ async function check_user(action, state) {
 // action/read/check_username.ts
 async function check_username(action, state) {
   if (action.input.username && action.input.username.length > 0) {
-    const result = state.user.filter(
-      (e) => e.username === action.input.username
-    );
-    if (result.length > 0) {
-      return { result: { status: 1, data: result[0] } };
-    } else {
-      return { result: { status: 0, data: "User is not register" } };
+    for (const address in state.user) {
+      if (state.user[address].username === action.input.username) {
+        return { result: { status: 1, data: state.user[address] } };
+      }
     }
+    return { result: { status: 0, data: "username is not register" } };
   } else {
     throw new ContractError("Username is missing");
+  }
+}
+
+// action/write/register_tag.ts
+async function register_tag(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (action.input.tag && action.input.tag.length > 0) {
+        const re = state.tags.filter((e) => e === action.input.tag);
+        if (re.length) {
+          return { state };
+        } else {
+          state.tags.push(action.input.tag);
+          return { state };
+        }
+      } else {
+        throw new ContractError("Tag is not Present");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
   }
 }
 
@@ -61,14 +82,16 @@ async function register(action, state) {
       if (_username.result.status === 0) {
         if (action.input.name.length > 0) {
           if (action.input.img_url.length > 0 && action.input.type.length > 0) {
-            state.user.push({
-              id: address,
+            state.user[address] = {
               name: action.input.name,
               username: action.input.username,
               img: { url: action.input.img_url, type: action.input.type },
               //@ts-ignore
               created_at: String(EXM.getDate().getTime()),
-            });
+              articles: [],
+              follower: [],
+              following: [],
+            };
             return { state };
           } else {
             throw new ContractError("img_url or type is missing");
@@ -87,6 +110,265 @@ async function register(action, state) {
   }
 }
 
+// action/read/get_tags.ts
+async function get_tags(state, __) {
+  return { result: { status: 1, data: state.tags } };
+}
+
+// action/write/register_article.ts
+async function register_articles(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (
+        action.input.id &&
+        action.input.title &&
+        action.input.udl &&
+        action.input.id.length > 0 &&
+        action.input.title.length > 0 &&
+        action.input.udl.length > 0
+      ) {
+        const _check = state.articles.filter((e) => e.id === action.input.id);
+        if (!_check.length) {
+          state.articles.push({
+            id: action.input.id,
+            title: action.input.title,
+            udl: action.input.udl,
+            //@ts-ignore
+            created_at: String(EXM.getDate().getTime()),
+            owner: [{ address }],
+            comment: [],
+            like: [],
+            tag:
+              action.input.tags && action.input.tags.length
+                ? action.input.tags
+                : [],
+          });
+          state.user[address].articles.push(action.input.id);
+          return { state };
+        } else {
+          throw new ContractError("Id is already taken");
+        }
+      } else {
+        throw new ContractError("Id, Title or Udl is missing");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
+// action/write/like_article.ts
+async function like_article(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (action.input.id && action.input.id.length > 0) {
+        const _article = state.articles.filter(
+          (e) => e.id === action.input.article_id
+        );
+        const _check = state.user[address].articles.filter(
+          (e) => e === action.input.article_id
+        );
+        if (_article.length && _check.length) {
+          const __check = _article[0].like.map((e) => e.address === address);
+          if (__check.length) {
+            return { state };
+          } else {
+            state.articles
+              .filter((e) => e.id === action.input.id)[0]
+              .like.push({ address });
+            return { state };
+          }
+        } else {
+          throw new ContractError("Article is not present");
+        }
+      } else {
+        throw new ContractError("Article id is missing");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
+// action/write/register_comment.ts
+async function register_comment(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (
+        action.input.article_id &&
+        action.input.id &&
+        action.input.article_id.length > 0 &&
+        action.input.id.length > 0
+      ) {
+        const _article = state.articles.filter((e) => e.id === action.input.id);
+        if (_article.length) {
+          state.articles
+            .filter((e) => e.id === action.input.article_id)[0]
+            .comment.push({
+              id: action.input.id,
+              owner: [{ address }],
+              like: [],
+              //@ts-ignore
+              created_at: String(EXM.getDate().getTime()),
+            });
+          return { state };
+        } else {
+          throw new ContractError("Article is not present");
+        }
+      } else {
+        throw new ContractError("Comment Id or Article Id is missign");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
+// action/write/like_comment.ts
+async function like_comment(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (
+        action.input.id &&
+        action.input.id.length > 0 &&
+        action.input.article_id &&
+        action.input.article_id.length > 0
+      ) {
+        const _check = state.articles.filter(
+          (e) => e.id === action.input.article_id
+        );
+        if (_check.length) {
+          const _comment = _check[0].comment.filter(
+            (e) => e.id === action.input.id
+          );
+          if (_comment.length) {
+            const __check = _comment[0].like.map((e) => e.address === address);
+            if (__check.length) {
+              return { state };
+            } else {
+              state.articles
+                .filter((e) => e.id === action.input.article_id)[0]
+                .comment.filter((e) => e.id === action.input.id)[0]
+                .like.push({ address });
+              return { state };
+            }
+          } else {
+            throw new ContractError("Comment is not present");
+          }
+        } else {
+          throw new ContractError("Article not present");
+        }
+      } else {
+        throw new ContractError("Id, Title or Udl is missing");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
+// action/utils/username_to_address.ts
+async function username_to_address(action, state) {
+  if (action.input.username && action.input.username.length) {
+    for (const address in state.user) {
+      if (state.user[address].username === action.input.username) {
+        return { result: { status: 1, data: address } };
+      }
+    }
+    return { result: { status: 0, data: "User is not register" } };
+  } else {
+    throw new ContractError("Username is missing");
+  }
+}
+
+// action/write/follow.ts
+async function follow(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      if (action.input.username && action.input.username.length) {
+        const _followers = await username_to_address(action, state);
+        if (
+          _followers.result.status &&
+          typeof _followers.result.data === "string"
+        ) {
+          state.user[address].follower.push({
+            address: _followers.result.data,
+          });
+          state.user[_followers.result.data].following.push({
+            address,
+          });
+          return { state };
+        } else {
+          throw new ContractError("Followers don't exits");
+        }
+      } else {
+        throw new ContractError("Id, Title or Udl is missing");
+      }
+    } else {
+      throw new ContractError("User is not Registered");
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
+// action/read/get_user.ts
+async function get_user(state, action) {
+  if (action.input.username && action.input.username.length) {
+    const user = await username_to_address(action, state);
+    if (user.result.status && typeof user.result.data === "string") {
+      return { result: { status: 1, data: state.user[user.result.data] } };
+    } else {
+      return { result: { status: 0, data: "User is not register" } };
+    }
+  } else {
+    throw new ContractError("Username is missing");
+  }
+}
+
+// action/read/get_article.ts
+async function get_article(state, action) {
+  if (action.input.title && action.input.article_id.length) {
+    const articles = state.articles.filter(
+      (e) => e.title === action.input.title
+    );
+    if (articles.length) {
+      return { result: { status: 1, data: articles[0] } };
+    } else {
+      return { result: { status: 0, data: "article not found" } };
+    }
+  } else {
+    throw new ContractError("title is missing");
+  }
+}
+
+// action/utils/address_to_username.ts
+async function address_to_username(state, action) {
+  if (action.input.pubKey && action.input.pubKey.length > 0) {
+    const address = await pubtoid_default(action.input.pubKey, state);
+    if (state.user[address] !== void 0) {
+      return { result: { status: 1, data: state.user[address].username } };
+    } else {
+      return { result: { status: 0, data: "User is not register" } };
+    }
+  } else {
+    throw new ContractError("PubKey is missing");
+  }
+}
+
 // init.ts
 export async function handle(state, action) {
   try {
@@ -97,6 +379,28 @@ export async function handle(state, action) {
         return await check_user(action, state);
       case "check_username":
         return await check_username(action, state);
+      case "register_tag":
+        return await register_tag(state, action);
+      case "get_tag":
+        return await get_tags(state, action);
+      case "register_article":
+        return await register_articles(state, action);
+      case "like_article":
+        return await like_article(state, action);
+      case "register_comment":
+        return await register_comment(state, action);
+      case "like_comment":
+        return await like_comment(state, action);
+      case "follow":
+        return await follow(state, action);
+      case "get_user":
+        return await get_user(state, action);
+      case "get_article":
+        return await get_article(state, action);
+      case "address_to_username":
+        return await address_to_username(state, action);
+      case "username_to_address":
+        return await username_to_address(action, state);
       default:
         throw new ContractError("ERROR_INVALID_FUNCTION_SUPPLIED");
     }

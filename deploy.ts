@@ -11,6 +11,12 @@ async function deploy() {
     const initState = fs.readFileSync(__dirname + "/dist/init.json", {
       encoding: "utf8",
     });
+    // const sourceCode = fs.readFileSync(__dirname + "/temp.js", {
+    //   encoding: "utf-8",
+    // });
+    // const initState = fs.readFileSync(__dirname + "/temp.json", {
+    //   encoding: "utf-8",
+    // });
     const body = {
       src: sourceCode,
       state: initState,
