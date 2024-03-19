@@ -29,7 +29,9 @@ export default async function like_comment(
             (e) => e.content === action.input.id
           );
           if (_comment.length) {
-            const __check = _comment[0].like.map((e) => e.address === address);
+            const __check = _comment[0].like.filter(
+              (e) => e.address === address
+            );
             if (__check.length) {
               return { state: state };
             } else {

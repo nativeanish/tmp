@@ -247,7 +247,9 @@ async function like_comment(state, action) {
             (e) => e.content === action.input.id
           );
           if (_comment.length) {
-            const __check = _comment[0].like.map((e) => e.address === address);
+            const __check = _comment[0].like.filter(
+              (e) => e.address === address
+            );
             if (__check.length) {
               return { state };
             } else {
@@ -404,6 +406,20 @@ async function get_article_by_id(state, action) {
   }
 }
 
+// action/read/get_user_by_address.ts
+async function get_user_by_address(state, action) {
+  if (action.input.id && action.input.id.length) {
+    const user = state.user[action.input.id];
+    if (user !== void 0) {
+      return { result: { status: 1, data: user } };
+    } else {
+      return { result: { status: 0, data: "User is not register" } };
+    }
+  } else {
+    throw new ContractError("ID is missing");
+  }
+}
+
 // init.ts
 export async function handle(state, action) {
   try {
@@ -442,6 +458,8 @@ export async function handle(state, action) {
         return await get_user_recom(state, action);
       case "get_article_by_id":
         return await get_article_by_id(state, action);
+      case "get_user_by_address":
+        return await get_user_by_address(state, action);
       default:
         throw new ContractError("ERROR_INVALID_FUNCTION_SUPPLIED");
     }
