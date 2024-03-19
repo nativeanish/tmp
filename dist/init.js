@@ -166,14 +166,9 @@ async function like_article(state, action) {
     const address = await pubtoid_default(action.input.pubKey, state);
     if (state.user[address] !== void 0) {
       if (action.input.id && action.input.id.length > 0) {
-        const _article = state.articles.filter(
-          (e) => e.id === action.input.article_id
-        );
-        const _check = state.user[address].articles.filter(
-          (e) => e === action.input.article_id
-        );
-        if (_article.length && _check.length) {
-          const __check = _article[0].like.map((e) => e.address === address);
+        const _article = state.articles.filter((e) => e.id === action.input.id);
+        if (_article.length) {
+          const __check = _article[0].like.filter((e) => e.address === address);
           if (__check.length) {
             return { state };
           } else {
